@@ -1,0 +1,31 @@
+@page
+@model BillingManagementSystem.Pages.Dashboard.IndexModel
+
+<h2>Dashboard</h2>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Customers</h5>
+                <p class="card-text">@Model.TotalCustomers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Revenue</h5>
+                <p class="card-text">@Model.TotalRevenue</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Overdue Payments</h5>
+                <p class="card-text">@Model.OverduePayments</p>
+            </div>
+        </div>
+    </div>
+</div>
