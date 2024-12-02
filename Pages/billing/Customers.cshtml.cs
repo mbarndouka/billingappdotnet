@@ -41,7 +41,7 @@ namespace billingApp.Pages.billing
 
             try 
             {
-                String con = "Data Source=DESKTOP-8U3MOCH\\SQLEXPRESS;Initial Catalog=billing;Integrated Security=True;Trust Server Certificate=True";
+                String con = "Data Source=DESKTOP-T80LP34;Initial Catalog=billing;Integrated Security=True";
                 using (SqlConnection connection = new SqlConnection(con))
                 { connection.Open(); 
                     string sqlQuery = "INSERT INTO Customers (Name, Email, Phone, Address) VALUES (@Name, @Email, @Phone, @Address);";
