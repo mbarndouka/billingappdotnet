@@ -4,8 +4,9 @@ using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
 using System.IO;
 using System;
+using System.Collections.Generic;
 
-namespace BillingManagementSystem.Pages.Invoices
+namespace billingApp.Pages.Invoices
 {
     public class CreateModel : PageModel
     {
@@ -18,23 +19,22 @@ namespace BillingManagementSystem.Pages.Invoices
             _pdfService = pdfService;
         }
 
-        public InvoiceInfo InvoiceInfo = new InvoiceInfo();
-        public string ErrorMessage = "";
-        public string SuccessMessage = "";
+        [BindProperty]
+        public InvoiceInfo InvoiceInfo { get; set; } = new InvoiceInfo();
+        public string ErrorMessage { get; set; } = "";
+        public string SuccessMessage { get; set; } = "";
 
         public void OnGet()
         {
+            InvoiceInfo.InvoiceNumber = "122N"; // Generate a unique invoice number
+            InvoiceInfo.IssueDate = DateTime.Now;
+            InvoiceInfo.DueDate = DateTime.Now.AddDays(30);
+            InvoiceInfo.Items = new List<InvoiceItem> { new InvoiceItem(), new InvoiceItem() };
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            InvoiceInfo.CustomerID = int.Parse(Request.Form["customerID"]);
-            InvoiceInfo.Date = DateTime.Parse(Request.Form["date"]);
-            InvoiceInfo.TotalAmount = decimal.Parse(Request.Form["totalAmount"]);
-
-            if (InvoiceInfo.CustomerID == 0 ||
-                InvoiceInfo.Date == DateTime.MinValue ||
-                InvoiceInfo.TotalAmount == 0)
+            if (!ModelState.IsValid)
             {
                 ErrorMessage = "All fields are required";
                 return Page();
@@ -47,12 +47,17 @@ namespace BillingManagementSystem.Pages.Invoices
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sqlQuery = "INSERT INTO Invoices (CustomerID, Date, TotalAmount) VALUES (@CustomerID, @Date, @TotalAmount);";
+                    string sqlQuery = "INSERT INTO Invoices (InvoiceNumber, CustomerId, UserId, IssueDate, DueDate, TotalAmount, Status, TaxAmount) VALUES (@InvoiceNumber, @CustomerId, @UserId, @IssueDate, @DueDate, @TotalAmount, @Status, @TaxAmount);";
                     using (SqlCommand command = new SqlCommand(sqlQuery, connection))
                     {
-                        command.Parameters.AddWithValue("@CustomerID", InvoiceInfo.CustomerID);
-                        command.Parameters.AddWithValue("@Date", InvoiceInfo.Date);
+                        command.Parameters.AddWithValue("@InvoiceNumber", InvoiceInfo.InvoiceNumber);
+                        command.Parameters.AddWithValue("@CustomerId", InvoiceInfo.CustomerId);
+                        command.Parameters.AddWithValue("@UserId", InvoiceInfo.UserId);
+                        command.Parameters.AddWithValue("@IssueDate", InvoiceInfo.IssueDate);
+                        command.Parameters.AddWithValue("@DueDate", InvoiceInfo.DueDate);
                         command.Parameters.AddWithValue("@TotalAmount", InvoiceInfo.TotalAmount);
+                        command.Parameters.AddWithValue("@Status", InvoiceInfo.Status);
+                        command.Parameters.AddWithValue("@TaxAmount", InvoiceInfo.TaxAmount);
 
                         command.ExecuteNonQuery();
                     }
@@ -62,16 +67,12 @@ namespace BillingManagementSystem.Pages.Invoices
                 string htmlContent = GenerateInvoiceHtml(InvoiceInfo);
                 byte[] pdfContent = _pdfService.GeneratePdf(htmlContent);
 
-                // Save the PDF to a file or send it as an attachment
-                string filePath = Path.Combine("Invoices", $"Invoice_{InvoiceInfo.CustomerID}_{InvoiceInfo.Date.ToString("yyyyMMdd")}.pdf");
-                System.IO.File.WriteAllBytes(filePath, pdfContent);
-
                 // Send email with PDF attachment
-                string customerEmail = "customer@example.com"; // Retrieve from DB based on CustomerID
+                string customerEmail = "customer@example.com"; // Retrieve from DB based on CustomerId
                 string subject = "Your Invoice from Billing Management System";
-                string body = $"Dear Customer, your invoice of {InvoiceInfo.TotalAmount:C} is due on {InvoiceInfo.Date.ToShortDateString()}.";
+                string body = $"Dear Customer, your invoice of {InvoiceInfo.TotalAmountWithVat:C} is due on {InvoiceInfo.DueDate.ToShortDateString()}.";
 
-                await _emailService.SendInvoiceEmailAsync(customerEmail, subject, body);
+                await _emailService.SendInvoiceEmailAsync(customerEmail, subject, body, pdfContent);
 
                 SuccessMessage = "Invoice created, PDF generated, and sent successfully!";
                 return RedirectToPage("/Invoices/Index");
@@ -89,9 +90,9 @@ namespace BillingManagementSystem.Pages.Invoices
             return $@"
             <html>
                 <body>
-                    <h2>Invoice #{invoice.CustomerID}</h2>
-                    <p>Date: {invoice.Date.ToString("yyyy-MM-dd")}</p>
-                    <p>Total Amount: {invoice.TotalAmount:C}</p>
+                    <h2>Invoice #{invoice.InvoiceNumber}</h2>
+                    <p>Date: {invoice.IssueDate.ToString("yyyy-MM-dd")}</p>
+                    <p>Total Amount: {invoice.TotalAmountWithVat:C}</p>
                     <p>Thank you for your business!</p>
                 </body>
             </html>";
@@ -100,8 +101,28 @@ namespace BillingManagementSystem.Pages.Invoices
 
     public class InvoiceInfo
     {
-        public int CustomerID { get; set; }
-        public DateTime Date { get; set; }
+        public string InvoiceNumber { get; set; }
+        public int CustomerId { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerAddress { get; set; }
+        public string UserId { get; set; }
+        public DateTime IssueDate { get; set; }
+        public DateTime DueDate { get; set; }
+        public string Description { get; set; }
+        public List<InvoiceItem> Items { get; set; }
         public decimal TotalAmount { get; set; }
+        public decimal Vat { get; set; }
+        public decimal TotalAmountWithVat { get; set; }
+        public string Status { get; set; }
+        public decimal TaxAmount { get; set; }
+    }
+
+    public class InvoiceItem
+    {
+        public int Index { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
+        public decimal TotalPrice { get; set; }
     }
 }

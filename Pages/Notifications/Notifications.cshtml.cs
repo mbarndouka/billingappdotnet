@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
 using System;
 
-namespace BillingManagementSystem.Pages.Notifications
+namespace billingApp.Pages.Notifications
 {
     public class CreateModel : PageModel
     {
@@ -26,11 +27,33 @@ namespace BillingManagementSystem.Pages.Notifications
                 return Page();
             }
 
-            // Save the notification
-            // (e.g., save to the database or notify the customer)
+            // Save the notification to the database
+            try
+            {
+                string connectionString = "YourConnectionStringHere";
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sqlQuery = "INSERT INTO Notifications (InvoiceId, Type, Message, SentAt) VALUES (@InvoiceId, @Type, @Message, @SentAt);";
+                    using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                    {
+                        command.Parameters.AddWithValue("@InvoiceId", NotificationInfo.CustomerID);
+                        command.Parameters.AddWithValue("@Type", "Notification");
+                        command.Parameters.AddWithValue("@Message", NotificationInfo.Message);
+                        command.Parameters.AddWithValue("@SentAt", NotificationInfo.Date);
 
-            SuccessMessage = "Notification added successfully!";
-            return RedirectToPage("/Notifications/Index");
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                SuccessMessage = "Notification added successfully!";
+                return RedirectToPage("/Notifications/Index");
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+                return Page();
+            }
         }
     }
 

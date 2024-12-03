@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
-using Microsoft.IdentityModel.Tokens;
 
 namespace billingApp.Pages.billing
 {
@@ -17,51 +16,52 @@ namespace billingApp.Pages.billing
             _configuration = configuration;
         }
 
-
         public void OnGet()
         {
         }
 
-        public void OnPost() {
+        public void OnPost()
+        {
             customerInfo.Name = Request.Form["name"];
             customerInfo.Email = Request.Form["email"];
             customerInfo.Phone = Request.Form["phone"];
             customerInfo.Address = Request.Form["address"];
-            
 
             if (string.IsNullOrEmpty(customerInfo.Name) ||
-                string.IsNullOrEmpty(customerInfo.Email) || 
+                string.IsNullOrEmpty(customerInfo.Email) ||
                 string.IsNullOrEmpty(customerInfo.Phone) ||
-                string.IsNullOrEmpty(customerInfo.Address)
-                ) 
-            { 
+                string.IsNullOrEmpty(customerInfo.Address))
+            {
                 ErrorMessage = "All fields are required";
-                return; 
+                return;
             }
 
-            try 
+            try
             {
                 String con = "Data Source=DESKTOP-T80LP34;Initial Catalog=billing;Integrated Security=True";
                 using (SqlConnection connection = new SqlConnection(con))
-                { connection.Open(); 
+                {
+                    connection.Open();
                     string sqlQuery = "INSERT INTO Customers (Name, Email, Phone, Address) VALUES (@Name, @Email, @Phone, @Address);";
                     using (SqlCommand command = new SqlCommand(sqlQuery, connection))
                     {
                         command.Parameters.AddWithValue("@Name", customerInfo.Name);
-                        command.Parameters.AddWithValue("@Email", customerInfo.Email); 
-                        command.Parameters.AddWithValue("@Phone", customerInfo.Phone); 
-                        command.Parameters.AddWithValue("@Address", customerInfo.Address); 
-                        command.ExecuteNonQuery(); 
-                    } 
+                        command.Parameters.AddWithValue("@Email", customerInfo.Email);
+                        command.Parameters.AddWithValue("@Phone", customerInfo.Phone);
+                        command.Parameters.AddWithValue("@Address", customerInfo.Address);
+                        command.ExecuteNonQuery();
+                    }
                 }
-            } catch (Exception ex) {
-                 ErrorMessage = ex.Message; 
-                 return; 
             }
-            customerInfo.Name = ""; 
-            customerInfo.Email = ""; 
-            customerInfo.Phone = ""; 
-            customerInfo.Address = ""; 
+            catch (Exception ex)
+            {
+                ErrorMessage = ex.Message;
+                return;
+            }
+            customerInfo.Name = "";
+            customerInfo.Email = "";
+            customerInfo.Phone = "";
+            customerInfo.Address = "";
             SuccessMessage = "New Customer added successfully";
             Response.Redirect("/Customers/Index");
         }

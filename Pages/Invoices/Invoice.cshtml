@@ -1,34 +1,124 @@
 @page
-@model billingApp.Pages.billing.InvoiceModel
-@{
-}
-<h2>New Invoice</h2>
-@if (Model.ErrorMessage.Length > 0)
-{
-<div class="alert alert-dismissible alert-warning fade show" role="alert">
-    <strong>@Model.ErrorMessage</strong>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="close"></button>
-</div>
-}
-<form method="post">
-    <div class="row mb-3">
-        <label class="col-sm-3 col-form-label">Invoice Number</label>
-        <div class="col-sm-6">
-            <input type="text" class="form-control" name="invoiceNumber" value="@Model.invoiceInfo.InvoiceNumber" />
+@model billingApp.Pages.Invoices.CreateModel
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Invoice</title>
+    <link rel="stylesheet" href="~/css/site.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+
+            .btn-primary:hover {
+                background-color: #0056b3;
+                border-color: #0056b3;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>New Invoice</h2>
+        @if (Model.ErrorMessage.Length > 0)
+        {
+        <div class="alert alert-dismissible alert-warning fade show" role="alert">
+            <strong>@Model.ErrorMessage</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="close"></button>
         </div>
+        }
+        <form method="post">
+            <div class="form-group">
+                <label for="invoiceNumber">Invoice Number</label>
+                <input type="text" class="form-control" id="invoiceNumber" name="invoiceNumber" value="@Model.InvoiceInfo.InvoiceNumber" readonly />
+            </div>
+            <div class="form-group">
+                <label for="customerName">Customer Name</label>
+                <input type="text" class="form-control" id="customerName" name="customerName" value="@Model.InvoiceInfo.CustomerName" />
+            </div>
+            <div class="form-group">
+                <label for="customerAddress">Customer Address</label>
+                <input type="text" class="form-control" id="customerAddress" name="customerAddress" value="@Model.InvoiceInfo.CustomerAddress" />
+            </div>
+            <div class="form-group">
+                <label for="issueDate">Issued Date</label>
+                <input type="date" class="form-control" id="issueDate" name="issueDate" value="@Model.InvoiceInfo.IssueDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="form-group">
+                <label for="dueDate">Due Date</label>
+                <input type="date" class="form-control" id="dueDate" name="dueDate" value="@Model.InvoiceInfo.DueDate.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3">@Model.InvoiceInfo.Description</textarea>
+            </div>
+            <div class="form-group">
+                <label for="items">Items</label>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Total Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.InvoiceInfo.Items)
+                        {
+                        <tr>
+                            <td><input type="text" class="form-control" name="items[@item.Index].Name" value="@item.Name" /></td>
+                            <td><input type="number" class="form-control" name="items[@item.Index].Price" value="@item.Price" /></td>
+                            <td><input type="number" class="form-control" name="items[@item.Index].Quantity" value="@item.Quantity" /></td>
+                            <td><input type="number" class="form-control" name="items[@item.Index].TotalPrice" value="@item.TotalPrice" readonly /></td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-secondary" onclick="addItem()">Add Item</button>
+            </div>
+            <div class="form-group">
+                <label for="totalAmount">Total Amount</label>
+                <input type="number" class="form-control" id="totalAmount" name="totalAmount" value="@Model.InvoiceInfo.TotalAmount" readonly />
+            </div>
+            <div class="form-group">
+                <label for="vat">VAT</label>
+                <input type="number" class="form-control" id="vat" name="vat" value="@Model.InvoiceInfo.Vat" readonly />
+            </div>
+            <div class="form-group">
+                <label for="totalAmountWithVat">Total Amount with VAT</label>
+                <input type="number" class="form-control" id="totalAmountWithVat" name="totalAmountWithVat" value="@Model.InvoiceInfo.TotalAmountWithVat" readonly />
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Create Invoice</button>
+                <a class="btn btn-outline-primary" href="/" role="button">Cancel</a>
+            </div>
+        </form>
     </div>
-    <div class="row mb-3">
-        <label class="col-sm-3 col-form-label">Customer ID</label>
-        <div class="col-sm-6">
-            <input type="text" class="form-control" name="customerId" value="@Model.invoiceInfo.CustomerId" />
-        </div>
-    </div>
-    <div class="row mb-3">
-        <div class="offset-sm-3 col-sm-3 d-grid">
-            <button type="submit" class="btn btn-primary" name="submit">Generate Invoice</button>
-        </div>
-        <div class="offset-sm-3 col-sm-3 d-grid">
-            <a class="btn btn-outline-primary" href="/" role="button">Cancel</a>
-        </div>
-    </div>
-</form>
+    <script>
+        function addItem() {
+            // Logic to add a new item row to the table
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

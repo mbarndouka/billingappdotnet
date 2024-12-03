@@ -31,6 +31,7 @@ builder.Services.AddResend(options =>
 
 // Add other necessary services
 builder.Services.AddSingleton<EmailService>();
+builder.Services.AddSingleton<PdfService>();
 
 var app = builder.Build();
 
