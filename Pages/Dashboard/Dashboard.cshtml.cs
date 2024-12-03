@@ -2,7 +2,7 @@ using System;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 
-namespace BillingManagementSystem.Pages.Dashboard
+namespace billingApp.Pages.Dashboard
 {
     public class IndexModel : PageModel
     {
